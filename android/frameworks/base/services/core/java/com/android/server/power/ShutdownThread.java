@@ -60,6 +60,10 @@ import com.android.internal.telephony.ITelephony;
 import com.android.server.RescueParty;
 import com.android.server.LocalServices;
 import com.android.server.pm.PackageManagerService;
+/*MAJUN BEGIN*/
+import android.app.ActivityManager;
+import com.android.server.pm.ShutDownDialog;
+/*MAJUN END*/
 import com.android.server.statusbar.StatusBarManagerInternal;
 
 import java.io.File;
@@ -67,6 +71,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/*MAJUN BEGIN*/
+import android.graphics.PixelFormat;
+import android.content.pm.ActivityInfo;
+/*MAJUN END*/
 public final class ShutdownThread extends Thread {
     // constants
     private static final String TAG = "ShutdownThread";
@@ -146,6 +154,10 @@ public final class ShutdownThread extends Thread {
 
     private static AlertDialog sConfirmDialog;
     private ProgressDialog mProgressDialog;
+    
+    /*MAJUN BEGIN*/
+    private static boolean sShutDownDialogShowing;
+    /*MAJUN END*/
 
     private ShutdownThread() {
     }
@@ -171,7 +183,13 @@ public final class ShutdownThread extends Thread {
         // ShutdownThread is called from many places, so best to verify here that the context passed
         // in is themed.
         context.assertRuntimeOverlayThemable();
-
+        /*MAJUN BEGIN*/
+        if (ActivityManager.isUserAMonkey()) {
+            Log.d(TAG, "Cannot request to shutdown when Monkey is running, returning.");
+            return;
+        }
+        /*MAJUN END*/
+		
         // ensure that only one thread is trying to power down.
         // any additional calls are just returned
         synchronized (sIsStartedGuard) {
@@ -181,22 +199,60 @@ public final class ShutdownThread extends Thread {
             }
         }
 
+        boolean showRebootOption = false;
+        String[] defaultActions = context.getResources().getStringArray(
+                com.android.internal.R.array.config_globalActionsList);
+        for (int i = 0; i < defaultActions.length; i++) {
+            if (defaultActions[i].equals("reboot")) {
+                showRebootOption = true;
+                break;
+            }
+        }
         final int longPressBehavior = context.getResources().getInteger(
                         com.android.internal.R.integer.config_longPressOnPowerBehavior);
-        final int resourceId = mRebootSafeMode
+        int resourceId = mRebootSafeMode
                 ? com.android.internal.R.string.reboot_safemode_confirm
                 : (longPressBehavior == 2
                         ? com.android.internal.R.string.shutdown_confirm_question
                         : com.android.internal.R.string.shutdown_confirm);
+        if (showRebootOption && !mRebootSafeMode) {
+            resourceId = com.oppo.internal.R.string.reboot_confirm;
+        }
 
         Log.d(TAG, "Notifying thread to start shutdown longPressBehavior=" + longPressBehavior);
 
         if (confirm) {
-            final CloseDialogReceiver closer = new CloseDialogReceiver(context);
-            if (sConfirmDialog != null) {
-                sConfirmDialog.dismiss();
+            //final CloseDialogReceiver closer = new CloseDialogReceiver(context);
+            
+            if (sShutDownDialogShowing) {
+                return;
+            }  
+          //  if (sConfirmDialog != null) {
+          //      sConfirmDialog.dismiss();
+          //  }
+            
+            final ShutDownDialog shutDown = new ShutDownDialog(context);
+            shutDown.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
+            shutDown.getWindow().getAttributes().setTitle("ShutDownWindow");
+            if (!context.getResources().getBoolean(
+                    com.android.internal.R.bool.config_sf_slowBlur)) {
+                shutDown.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
             }
-            sConfirmDialog = new AlertDialog.Builder(context)
+            WindowManager.LayoutParams lp = shutDown.getWindow().getAttributes();
+            //lp.screenOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            lp.format= PixelFormat.TRANSLUCENT;
+            shutDown.setOnDismissListener(new Dialog.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface i) {
+                    sShutDownDialogShowing = false;
+                }
+            });
+            shutDown.show();
+            sShutDownDialogShowing = true;
+            /*MAJUN END*/
+        } else {
+        	if (mRebootSafeMode) {
+        		sConfirmDialog = new AlertDialog.Builder(context)
                     .setTitle(mRebootSafeMode
                             ? com.android.internal.R.string.reboot_safemode_title
                             : com.android.internal.R.string.power_off)
@@ -208,16 +264,19 @@ public final class ShutdownThread extends Thread {
                     })
                     .setNegativeButton(com.android.internal.R.string.no, null)
                     .create();
-            closer.dialog = sConfirmDialog;
-            sConfirmDialog.setOnDismissListener(closer);
-            sConfirmDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
-            sConfirmDialog.show();
-        } else {
-            beginShutdownSequence(context);
+            //closer.dialog = sConfirmDialog;
+            //sConfirmDialog.setOnDismissListener(closer);
+              sConfirmDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
+              sConfirmDialog.show();
+          } else {
+          	 beginShutdownSequence(context);
+          }
+            
         }
     }
 
-    private static class CloseDialogReceiver extends BroadcastReceiver
+    /*MAJUN BEGIN*/
+    /*private static class CloseDialogReceiver extends BroadcastReceiver
             implements DialogInterface.OnDismissListener {
         private Context mContext;
         public Dialog dialog;
@@ -236,7 +295,8 @@ public final class ShutdownThread extends Thread {
         public void onDismiss(DialogInterface unused) {
             mContext.unregisterReceiver(this);
         }
-    }
+    }*/
+    /*MAJUN END*/
 
     /**
      * Request a clean shutdown, waiting for subsystems to clean up their

@@ -1708,17 +1708,22 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
     @Override
     public void showGlobalActions() {
-        mHandler.removeMessages(MSG_DISPATCH_SHOW_GLOBAL_ACTIONS);
-        mHandler.sendEmptyMessage(MSG_DISPATCH_SHOW_GLOBAL_ACTIONS);
+	    /*MAJUN BEGIN*/
+        //mHandler.removeMessages(MSG_DISPATCH_SHOW_GLOBAL_ACTIONS);
+        //mHandler.sendEmptyMessage(MSG_DISPATCH_SHOW_GLOBAL_ACTIONS);
+		/*MAJUN END*/
     }
 
     void showGlobalActionsInternal() {
         sendCloseSystemWindows(SYSTEM_DIALOG_REASON_GLOBAL_ACTIONS);
-        if (mGlobalActions == null) {
-            mGlobalActions = new GlobalActions(mContext, mWindowManagerFuncs);
-        }
+	    /*MAJUN BEGIN*/
+        //if (mGlobalActions == null) {
+        //    mGlobalActions = new GlobalActions(mContext, mWindowManagerFuncs);
+        //}
         final boolean keyguardShowing = isKeyguardShowingAndNotOccluded();
-        mGlobalActions.showDialog(keyguardShowing, isDeviceProvisioned());
+        //mGlobalActions.showDialog(keyguardShowing, isDeviceProvisioned());
+        mWindowManagerFuncs.shutdown(true);
+        /*MAJUN END*/
         if (keyguardShowing) {
             // since it took two seconds of long press to bring this up,
             // poke the wake lock so they have some time to see the dialog.

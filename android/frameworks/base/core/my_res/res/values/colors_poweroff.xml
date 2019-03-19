@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <color name="globalactions_tips_textcolor">#ff8b8b8b</color>
+    
+    <color name="poweroff_textview_color_normal">#757579</color>
+    <color name="poweroff_textview_color_pressd">#d3d9db</color>
+    
+</resources>

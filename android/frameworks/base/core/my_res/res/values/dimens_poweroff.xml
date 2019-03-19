@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	
+    <dimen name="poweroff_textview_padding">12dp</dimen>
+    <dimen name="poweroff_textview_size">15sp</dimen>
+    <dimen name="globalactions_tips_textsize">13.0dip</dimen>
+    <dimen name="globalactions_line_space">8.0dip</dimen>
+    
+</resources>

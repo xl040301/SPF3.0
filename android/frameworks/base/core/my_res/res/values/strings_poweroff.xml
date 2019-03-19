@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  
+        <string name="oppo_power_tips_portrait">"Tips:Press and hold power key for 10s or more,to forciby reboot"</string>
+       <string name="oppo_reboot_progress">"Restarting..."</string>
+       <string name="oppo_poweroff">shutdown</string>
+       <string name="oppo_reboot">reboot</string>
+       <string name="reboot_confirm">Your phone will reboot</string>
+
+</resources>
